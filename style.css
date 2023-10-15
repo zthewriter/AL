@@ -1,0 +1,10 @@
+html {
+  height: 100%;
+  width: 100%;
+}
+
+/* Add this rule to set the background color for the first row */
+#billTable tr:first-child {
+    background-color: #033047;
+    color: white;
+}
