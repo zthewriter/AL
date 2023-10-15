@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill Data</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: Verdana, sans-serif; /* Set font family for the entire table */
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        /* Updated Rule for the first row's background color */
+        #billTable tr:first-child th {
+            background-color: #033047; /* Set the background color to #033047 */
+            color: white; /* Set font color for the first row */
+            font-family: Verdana, sans-serif; /* Set font family for the first row */
+        }
+        #billTable th:last-child, #billTable td:last-child {
+            width: 20%; /* Increase this value as needed */
+        }
+
+      /* Add this rule to change the font for the page title */
+      h1 {
+          font-family: Verdana, sans-serif;
+      }
+    </style>
+</head>
+
+<body>
+    <h1>Bill Data</h1>
+    <table id="billTable">
+        <tr>
+            <th>Bill Number</th>
+            <th>Bill ID</th>
+            <th>Text URL</th>
+            <th>Last Action Date</th>
+            <th>Last Action</th>
+            <th>Summary</th> <!-- Change the title text here -->
+        </tr>
+    </table>
+
+    <script>
+    // Warning: API keys should not be exposed on the client side.
+    // This is for educational/demonstration purposes only.
+    const apiKey = '3e4fa14a5c301223d291776f0f4555a7';
+    const apiUrl = `https://api.legiscan.com/?key=${apiKey}&op=getSearch&state=AL&year=2023&query=%22same-sex%22%20OR%20%22drag%22%20OR%20%22transgender%22&page=1`;
+
+    const fetchData = () => {
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                const results = data.searchresult;
+                const table = document.getElementById('billTable');
+
+                // Clear previous rows, except for the header
+                while (table.rows.length > 1) {
+                    table.deleteRow(1);
+                }
+
+                // Loop through each property in 'results'.
+                for (let prop in results) {
+                    if (typeof results[prop] === 'object' && !Array.isArray(results[prop])) {
+                        const bill = results[prop];
+                        const row = table.insertRow(-1);
+
+                        row.insertCell(0).textContent = bill.bill_number;
+                        row.insertCell(1).textContent = bill.bill_id;
+                        row.insertCell(2).textContent = bill.text_url;
+                        row.insertCell(3).textContent = bill.last_action_date;
+                        row.insertCell(4).textContent = bill.last_action;
+                        row.insertCell(5).textContent = bill.title;
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    };
+
+    fetchData();
+    setInterval(fetchData, 1209600000); // Update every two weeks
+    </script>
+</body>
+
+</html>
+
+
