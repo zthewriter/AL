@@ -1,53 +1,32 @@
-document.getElementById('scrapeButton').addEventListener('click', scrapeAndExport);
-
-async function scrapeAndExport() {
+const exportBillText = async () => {
     const table = document.getElementById('billTable');
-    const rows = table.querySelectorAll('tr');
-    let combinedContent = '';
+    let exportedText = '<html><head><title>Bill Texts</title></head><body>';
 
-    // Use Promise.all to wait for all fetches to complete
-    try {
-        await Promise.all(Array.from(rows).slice(1).map((row, index) => {
-            const urlCell = row.querySelector('td:nth-child(3)');
-            const url = urlCell.textContent.trim();
+    for (let i = 1; i < table.rows.length; i++) { // Start from 1 to avoid the header
+        const billId = table.rows[i].cells[1].textContent;
+        const apiUrl = `https://api.legiscan.com/?key=${apiKey}&op=getBillText&id=${billId}`;
 
-            console.log(`Fetching URL ${index + 1}: ${url}`); // Logging URL
+        try {
+            const response = await fetch(apiUrl);
+            const data = await response.json();
 
-            return fetch(url)
-                .then(response => {
-                    if (!response.ok) { // Check if response went through
-                        throw new Error('Network response was not ok' + response.statusText);
-                    }
-                    return response.text();
-                })
-                .then(content => {
-                    combinedContent += content;
-                });
-        }));
-    } catch (error) {
-        console.error('Error fetching content:', error);
-        // Handle error and potentially inform the user
-        alert("There was an error fetching the data. Check the console for details.");
-        return; // Exit function
+            if (data && data.text && data.text.doc) {
+                const decodedText = atob(data.text.doc); // decode base64
+                exportedText += `<h2>${table.rows[i].cells[0].textContent}</h2>`;
+                exportedText += `<p>${decodedText}</p>`;
+            }
+        } catch (error) {
+            console.error('An error occurred while fetching the data: ', error);
+        }
     }
 
-    // Only after all fetches have been resolved, export the content
-    if (combinedContent.trim()) {
-        exportContent(combinedContent);
-    } else {
-        alert("No content was fetched. Please check the URLs and try again.");
-    }
-}
+    exportedText += '</body></html>';
 
-function exportContent(content) {
-    // Create a Blob with the combined content
-    const blob = new Blob([content], { type: 'text/html' });
+    const blob = new Blob([exportedText], {type: "text/html"});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "billTexts.html";
+    link.click();
+};
 
-    // Create a link to download the HTML file
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'combined_content.html';
-
-    // Trigger a click event on the link to start the download
-    a.click();
-}
+document.getElementById('exportBtn').addEventListener('click', exportBillText);
